@@ -465,7 +465,8 @@ def xml2dict(xmlstr, custom_root=None, encoding='UTF-8'):
         return key, value
     if not isinstance(xmlstr, unicode):
         xmlstr = xmlstr.decode(encoding)
-    result = parse(xmlstr, dict_constructor=dict, postprocessor=postprocessor)
+    # result = parse(xmlstr, dict_constructor=dict, postprocessor=postprocessor)
+    result = parse(xmlstr, postprocessor=postprocessor)
     if custom_root:
         return result[custom_root]
     return result

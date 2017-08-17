@@ -332,11 +332,10 @@ def convert_kv(key, val, attr_type, attr={}, cdata=False):
     if attr_type:
         attr['type'] = get_xml_type(val)
     attrstring = make_attrstring(attr)
-    return '<%s%s>%s</%s>' % (
-        key, attrstring,
-        wrap_cdata(val) if cdata == True else escape_xml(val),
-        key
-    )
+    val = wrap_cdata(val) if cdata == True else escape_xml(val)
+    if not val:
+        return '<%s%s/>' % (key, attrstring)
+    return '<%s%s>%s</%s>' % (key, attrstring, val, key)
 
 
 def convert_bool(key, val, attr_type, attr={}, cdata=False):
@@ -362,7 +361,8 @@ def convert_none(key, val, attr_type, attr={}, cdata=False):
     if attr_type:
         attr['type'] = get_xml_type(val)
     attrstring = make_attrstring(attr)
-    return '<%s%s></%s>' % (key, attrstring, key)
+    # return '<%s%s></%s>' % (key, attrstring, key)
+    return '<%s%s/>' % (key, attrstring)
 
 
 def dict2xml(obj, root=True, custom_root='root', ids=False, attr_type=False,
@@ -387,7 +387,7 @@ def dict2xml(obj, root=True, custom_root='root', ids=False, attr_type=False,
     output = []
     addline = output.append
     if root == True:
-        addline('<?xml version="1.0" encoding="%s"?>' % encoding)
+        addline('<?xml version="1.0" encoding="%s"?>\n' % encoding)
         addline('<%s>%s</%s>' % (
         custom_root,
         convert(obj, ids, attr_type, item_func, cdata, parent=custom_root),
