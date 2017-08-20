@@ -98,35 +98,31 @@ def single_cash():
  * TRX_CODE:100011--单笔实时代收
     """
     params = {
-        'INFO': {
-            'TRX_CODE': '100011',
-            'VERSION': '03',
-            'DATA_TYPE': '2',
-            'LEVEL': '6',
-            'USER_NAME': tools.USER_NAME,
-            'USER_PASS': tools.USER_PASS,
-            'REQ_SN': tools.get_req_sn(),
-        },
+        'INFO': tools.get_req_info('100011'),
         'TRANS': {
-            'BUSINESS_CODE': '10201', #'09400',
+            'BUSINESS_CODE': '19900', #业务代码 附录3.2 '09400',
             'MERCHANT_ID': tools.MERCHANT_ID,
             'SUBMIT_TIME': time.strftime('%Y%m%d%H%M%S'),
             'E_USER_CODE': 'zyw',
-            'BANK_CODE': '0105',
-            'ACCOUNT_TYPE': '00',
-            'ACCOUNT_NO': '6227001447170048826',
-            'ACCOUNT_NAME': 'ZYW',
-            'ACCOUNT_PROP': '0',
-            'AMOUNT': '100',
+            'BANK_CODE': '0102',  # 银行代码，见附录4.3
+            'ACCOUNT_TYPE': '00',  # 00银行卡，01存折，02信用卡。不填默认为银行卡00。
+            'ACCOUNT_NO': '6212260200047447046',  # 账号银行卡或存折号码
+            'ACCOUNT_NAME': '张彦伟',  # 银行卡或存折上的所有人姓名。
+            'ACCOUNT_PROP': '0',  # 0私人，1公司。不填时，默认为私人0。
+            'ID_TYPE': '0',  # 0：身份证,1: 户口簿，2：护照,3.军官证,4.士兵证，5. 港澳居民来往内地通行证,6. 台湾同胞来往内地通行证,7. 临时身份证,8. 外国人居留证,9. 警官证, X.其他证件
+            'ID': '410621198705131076',   # 证件号
+            'TEL': '18910437238',  # 手机号/小灵通
+            'AMOUNT': '1',
             'CURRENCY': 'CNY',
-            'ID_TYPE': '0',
             'CUST_USERID': 'zyw',
-            'SUMMARY': 'zyw提现',
-            'REMARK': 'zyw-test',
+            'SUMMARY': 'zyw-test',
+            # 'MERREM': '',    # 商户保留信息
+            'REMARK': 'zyw-test',  # 供商户填入参考信息。若为信用卡，填有效期
         },
     }
     print params
     result = tools.send(params)
+    print result
     if result:
         print '验签通过，请对返回信息进行处理'
         # 下面商户自定义处理逻辑，此处返回一个数组
@@ -162,6 +158,6 @@ def query_ret():
 
 
 if __name__ == '__main__':
-    query_ret()
-    # single_cash()
+    # query_ret()
+    single_cash()
     # batch_tranx()

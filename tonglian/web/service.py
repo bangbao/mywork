@@ -1,5 +1,6 @@
 # coding: utf-8
 
+import time
 import urllib
 import requests
 import appconfig
@@ -10,23 +11,27 @@ def pay():
     """发起支付
     """
     params = {}
-    params["cusid"] = appconfig.CUSID
-    params["appid"] = appconfig.APPID
-    params["version"] = appconfig.APIVERSION
-    params["trxamt"] = "1"
-    params["reqsn"] = "123456"      #订单号,自行生成
-    params["paytype"] = "W02"
-    params["randomstr"] = "1450432107647"
-    params["body"] = "商品名称"
-    params["remark"] = "备注信息"
-    params["acct"] = "openid"
-    params["limit_pay"] = "no_credit"
+    params["cusid"] = appconfig.CUSID    # 平台分配的商户号
+    params["appid"] = appconfig.APPID    # 平台分配的APPID
+    params["version"] = appconfig.APIVERSION    # 接口版本号
+    params["trxamt"] = "1"  # 交易金额 单位为分
+    params["reqsn"] =  str(int(time.time()*1000000))     #订单号,自行生成
+    params["paytype"] = "W02"  # 交易方式 详见附录3.3 交易方式
+    params["randomstr"] = str(int(time.time()))
+    params["body"] = "商品名称"  # 订单商品名称，为空则以商户名作为商品名称
+    params["remark"] = "备注信息"  # 备注信息
+    params['validtime'] = '10'  # 订单有效时间，以分为单位，不填默认为15分钟
+    params["acct"] = "19ec8d0cf96c11e6890300163e0013dd"   # 支付平台用户标识 JS支付时使用微信支付-用户的微信openid支付宝支付-用户user_id
+    params["limit_pay"] = "no_credit"  # 支付限制 no_credit--指定不能使用信用卡支付
     params["notify_url"] = "http://pay.shuidiguanjia.com/pay-callback-lianlian/"
     params["sign"] = apputil.sign_array(params,appconfig.APPKEY)  #签名
 
     url = appconfig.APIURL + "/pay"
+    print url
+    print params
     resp = requests.post(url, params, timeout=5)
     rspArray = resp.json()
+    print rspArray
     if validSign(rspArray):
         print "验签正确,进行业务处理"
 
@@ -80,7 +85,7 @@ def  query():
     params["version"] = appconfig.APIVERSION
     params["reqsn"] = "123456"
     params["randomstr"] = "1450432107647"#
-    params["sign"] = apputil.sign_array(params,appconfig.APPKEY)#签名
+    params["sign"] = apputil.sign_array(params,appconfig.APPKEY)  #签名
 
     url = appconfig.APIURL + "/query"
     rsp = requests.post(url, params)
@@ -107,8 +112,8 @@ def validSign(array):
 
 
 if __name__ == '__main__':
-    #pay()
+    pay()
     # cancel()
     # refund()
-    query()
+    #query()
 
