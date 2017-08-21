@@ -20,8 +20,8 @@ def pay():
     params["randomstr"] = str(int(time.time()))
     params["body"] = "商品名称"  # 订单商品名称，为空则以商户名作为商品名称
     params["remark"] = "备注信息"  # 备注信息
-    params['validtime'] = '10'  # 订单有效时间，以分为单位，不填默认为15分钟
-    params["acct"] = "19ec8d0cf96c11e6890300163e0013dd"   # 支付平台用户标识 JS支付时使用微信支付-用户的微信openid支付宝支付-用户user_id
+    params['validtime'] = '15'  # 订单有效时间，以分为单位，不填默认为15分钟
+    params["acct"] = "o-JEQweC0kSAucr1e2xxhI7pclko"   # 支付平台用户标识 JS支付时使用微信支付-用户的微信openid支付宝支付-用户user_id
     params["limit_pay"] = "no_credit"  # 支付限制 no_credit--指定不能使用信用卡支付
     params["notify_url"] = "http://pay.shuidiguanjia.com/pay-callback-lianlian/"
     params["sign"] = apputil.sign_array(params,appconfig.APPKEY)  #签名
@@ -32,8 +32,22 @@ def pay():
     resp = requests.post(url, params, timeout=5)
     rspArray = resp.json()
     print rspArray
-    if validSign(rspArray):
-        print "验签正确,进行业务处理"
+
+    # 验签失败
+    if not validSign(rspArray):
+        return False, {'ret_code': '9999',
+                       'ret_msg': u'验签失败'}
+    # 通信失败
+    if rspArray['retcode'] != 'SUCCESS':
+        return False, {'ret_code': rspArray['retcode'],
+                       'ret_msg': rspArray['retmsg']}
+    # 交易失败
+    if rspArray['trxstatus'] != '0000':
+        return False, {'ret_code': rspArray['trxstatus'],
+                       'ret_msg': rspArray['errmsg']}
+
+    # 交易成功
+    return True, rspArray
 
 
 def  cancel():
