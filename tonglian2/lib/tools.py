@@ -5,12 +5,14 @@ import time
 import binascii
 import logging
 import requests
-from dict2xml import dict2xml
-from xml2dict import xml2dict
 from Crypto.Hash import SHA
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Util.asn1 import DerSequence
+
+import config
+from dict2xml import dict2xml
+from xml2dict import xml2dict
 
 
 logger = logging.getLogger('tonglian')
@@ -25,7 +27,7 @@ def verifyXml(xmlResponse):
 
     print '验签原文', xmlResponseSrc.decode('GBK')
 
-    flag = verifyStr(xmlResponseSrc, signature, CERT_KEY)
+    flag = verifyStr(xmlResponseSrc, signature, config.CERT_KEY)
     if (flag):
         # 变成数组，做自己相关业务逻辑
         return xml2dict(xmlResponse, custom_root='AIPG', encoding='GBK')
@@ -42,7 +44,7 @@ def verifyStr(data, signature, pub_key=None):
     Returns:
         验签是否通过 bool值
     """
-    pub_key = pub_key or CERT_KEY
+    pub_key = pub_key or config.CERT_KEY
     lines = pub_key.replace(" ", '').split()
     der = binascii.a2b_base64(''.join(lines[1:-1]))
     cert = DerSequence()
@@ -68,7 +70,7 @@ def signXml(params):
     xmlSignSrc = dict2xml(params, custom_root='AIPG', encoding='GBK')
     xmlSignSrc = xmlSignSrc.replace('TRANS_DETAIL2', 'TRANS_DETAIL')
 
-    params['INFO']['SIGNED_MSG'] = signStr(xmlSignSrc, PRIVATE_KEY, PASSWORD)
+    params['INFO']['SIGNED_MSG'] = signStr(xmlSignSrc, config.PRIVATE_KEY, config.PASSWORD)
 
     xmlSignPost = dict2xml(params, custom_root='AIPG', encoding='GBK')
 
@@ -84,7 +86,7 @@ def signStr(data, pri_key=None, passphrase=None):
     Returns:
         Sign签名，需要用base64编码
     """
-    pri_key = pri_key or PRIVATE_KEY
+    pri_key = pri_key or config.PRIVATE_KEY
     rsakey = RSA.importKey(pri_key, passphrase)
     signer = PKCS1_v1_5.new(rsakey)
     h = SHA.new(data)
@@ -98,8 +100,8 @@ def send(params):
     """
     xmlSignPost = signXml(params)
     xmlSignPost = xmlSignPost.replace('TRANS_DETAIL2', 'TRANS_DETAIL')
-    logger.info('tonglian request: %s %s' % (apiUrl, xmlSignPost))
-    response = requests.post(apiUrl, xmlSignPost)
+    logger.info('tonglian request: %s %s' % (config.apiUrl, xmlSignPost))
+    response = requests.post(config.apiUrl, xmlSignPost)
     xmlResponse = response.text
     logger.info('tonglian response: %s' % xmlResponse)
     #print repr(xmlResponse)
@@ -116,7 +118,7 @@ def random_chars(length=6):
 def get_req_sn():
     """生成请求交易批次号
     """
-    return '%s-%s-%s' % (MERCHANT_ID, time.strftime('%Y%m%d%H%M%S'),
+    return '%s-%s-%s' % (config.MERCHANT_ID, time.strftime('%Y%m%d%H%M%S'),
                          random_chars(6))
 
 
@@ -139,8 +141,8 @@ def get_req_info(trx_code, version='03', data_type='2', level='5',
         'VERSION': version,
         'DATA_TYPE': data_type,
         'LEVEL': level,
-        'USER_NAME': user_name or USER_NAME,
-        'USER_PASS': user_pass or USER_PASS,
+        'USER_NAME': user_name or config.USER_NAME,
+        'USER_PASS': user_pass or config.USER_PASS,
         'REQ_SN': req_sn or get_req_sn(),
     }
 
@@ -155,5 +157,5 @@ if __name__ == '__main__':
     print xmlstr.encode('GBK')
     print
     print xmlsrc
-    print signStr(xmlsrc, PRIVATE_KEY, PASSWORD)
+    print signStr(xmlsrc, config.PRIVATE_KEY, config.PASSWORD)
     #print mersign
