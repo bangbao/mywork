@@ -43,3 +43,22 @@ def get_keyword_qfilter(field_keys, keyword, separate=' '):
             fkey = '%s__contains' % key
             qfilter |= Q(**{fkey: word})
     return qfilter
+
+
+def get_or_qfilter(qfilter=None, **kwargs):
+    """合并或过滤器
+    """
+    qfilter = qfilter or Q()
+    for fkey, fval in kwargs.iteritems():
+        qfilter |= Q(**{fkey: fval})
+    return qfilter
+
+
+def get_and_qfilter(qfilter=None, **kwargs):
+    """合并和过滤器
+    """
+    qfilter = qfilter or Q()
+    for fkey, fval in kwargs.iteritems():
+        qfilter &= Q(**{fkey: fval})
+    return qfilter
+
