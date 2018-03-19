@@ -1,59 +1,32 @@
 # coding: utf-8
 
-import threading
-from django.core.cache import cache
+import time
+from .worker import ThreadWorker, ProcessWorker
+
+worker = None
+
+def get_worker(woker_class=ThreadWorker):
+    global worker
+    if worker is None:
+        worker = woker_class()
+        worker.start()
+    return worker
 
 
-def get_redis_client():
-    return cache.get_master_client()
+def enqueue(f, *args, **kwargs):
+    worker = get_worker()
+    worker.enqueue(f, *args, **kwargs)
 
 
-class RedisQueue(object):
-    def __init__(self):
-        pass
+def test():
+    worker = get_worker()
 
-    def push(self, one):
-        pass
-
-    def pop(self, ):
-        pass
-
-
-class Job(object):
-    """任务类
-    """
-
-class Worker(object):
-    def push_job(self, job):
-        self.dataQueue.push(job)
-
-    def pop_job(self):
-        return self.dataQueue.pop()
-
-    def do_job(self, job):
-        return job.execute()
+    while 1:
+        print worker.info()
+        time.sleep(1)
+        if not worker.is_alive():
+            break
 
 
-class ThreadWorker(Worker, threading.Thread):
-    def __init__(self):
-        threading.Thread.__init__(self)
-        self.dataQueue = RedisQueue()
-        self.name = self.__class__.__name__
-
-
-    def run(self):
-        print '%s : ready to work' % self.name
-        while 1:
-            try:
-                job = self.pop_job()
-            except:
-                continue
-            if job is None:
-                print '%s: Got None, break thread' % self.name
-                break
-
-            self.do_job(job)
-        print '%s: is stoped' % self.name
-
-class ProcessWorker(Worker):
-    pass
+if __name__ == '__main__':
+    test()
