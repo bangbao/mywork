@@ -1,6 +1,6 @@
 # coding: utf-8
 
-import threading
+import datetime
 import inspect
 import traceback
 import cPickle as pickle
@@ -62,6 +62,8 @@ class Job(object):
         job._timeout = timeout
         job._status = status
         job._result = None
+        job._stime = None
+        job._etime = None
 
         return job
 
@@ -74,6 +76,8 @@ class Job(object):
             'status': self._status,
             'timeout': self._timeout,
             'result': self._result,
+            'stime': self._stime,
+            'etime': self._etime,
         }
 
     def from_dict(self, data):
@@ -83,7 +87,9 @@ class Job(object):
         self._kwargs = data['kwargs']
         self._status = data['status']
         self._timeout = data['timeout']
-        self._result = data.get('result', None)
+        self._result = data['result']
+        self._stime = data['stime']
+        self._etime = data['etime']
 
     @classmethod
     def loads(cls, data):
@@ -100,16 +106,20 @@ class Job(object):
         """获取执行函数对象
         """
         try:
-            modname, funcname = str(self.func_name).rsplit('.', 1)
+            modname, funcname = str(self._func_name).rsplit('.', 1)
             module = __import__(modname, globals(), locals(), [funcname])
             func = getattr(module, funcname)
             return func
-        except (ImportError, AttributeError, ValueError):
+        except (ImportError, AttributeError, ValueError) as e:
+            print e
             return None
 
     def execute(self):
         """执行任务
         """
+        self._status = JobStatus.STARTED
+        self._stime = datetime.datetime.now()
+
         args, kwargs = self._args, self._kwargs
         func = self.get_func()
         if not func:
@@ -125,15 +135,30 @@ class Job(object):
     def success_callback(self, result):
         """执行函数成功处理
         """
-        self._result = dumps(result)
+        self._status = JobStatus.FINISHED
+        self._end_time = datetime.datetime.now()
+        self._result = repr(result)
         return True
 
     def failure_callback(self, errmsg):
         """执行函数失败处理
         """
-        self._status = 2
+        self._status = JobStatus.FAILED
         self._result = errmsg
+        self._end_time = datetime.datetime.now()
         return False
 
     def __str__(self):
-        return self.to_dict()
+        return '<Job(fn=%s, kwargs=%s, status=%s, cost_time=%.2f)>' % (
+            self._func_name, self._kwargs, self._status, self.cost_time)
+
+    __repr__ = __str__
+
+    @property
+    def cost_time(self):
+        if self._etime and self._stime:
+            return (self._etime - self._stime).total_seconds()
+        if self._stime:
+            now = datetime.datetime.now()
+            return (now - self._stime).total_seconds()
+        return 0
