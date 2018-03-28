@@ -2,15 +2,15 @@
 
 import time
 import datetime
-from .api import enqueue, start_worker, test_job
+from .api import enqueue, start_worker, test_job, push_to_asyncjob
 
 
 def test():
     worker = start_worker()
-    enqueue(test_job, b=str(datetime.datetime.now()))
-    time.sleep(1)
-    enqueue(test_job, b=str(datetime.datetime.now()))
-    time.sleep(1)
+
+    push_to_asyncjob(test_job, 12)
+    #test_job(12)
+    #test_job(20)
 
     while 1:
         #print worker.info()

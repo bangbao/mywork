@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import time
+import functools
 from .worker import ThreadWorker, ProcessWorker
 from .job import Job, JobStatus
 from .queue import RedisQueue, get_redis_client
@@ -56,17 +57,49 @@ def enqueue(f, *args, **kwargs):
     return job
 
 
+def push_to_asyncjob(f, *args, **kwargs):
+    """加入异步任务
+    """
+    start_worker()
+    enqueue(f, *args, **kwargs)
+
+
+class asyncjob(object):
+    """异步任务
+    Args:
+        use_async: 是否异步执行
+    """
+    def __init__(self, use_async=True):
+        self.use_async = use_async
+        if self.use_async:
+            self.worker = start_worker()
+
+    def __call__(self, func):
+        @functools.wraps(func)
+        def wraper(*args, **kwargs):
+            if self.use_async:
+                print locals()
+                print dir(func)
+                print dir(self)
+                print 'using async: %s %s %s' % (func.__name__, args, kwargs)
+                #return enqueue(func, *args, **kwargs)
+            return func(*args, **kwargs)
+        return wraper
+
+
+#@asyncjob()
 def test_job(b):
-    count = 5
+    count = b
     while count > 0:
         count -= 1
         time.sleep(1)
         print 'test_job: %s' % locals()
 
-
-def test_job2(a):
-    num = 10
-    while num > 0:
-        num -= 1
-        time.sleep(1)
-        print 'test_job2: %s' % locals()
+#
+# @asyncjob()
+# def test_job2(a):
+#     num = a
+#     while num > 0:
+#         num -= 1
+#         time.sleep(1)
+#         print 'test_job2: %s' % locals()

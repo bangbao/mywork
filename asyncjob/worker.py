@@ -60,7 +60,7 @@ class Worker(object):
         pipeline.hmset(self.key, info)
         pipeline.expire(self.key, 3600)
         pipeline.execute()
-        print self.key, info
+        #print self.key, info
         # self.log('%s: hello, I am alive' % self.name)
 
     def run(self):

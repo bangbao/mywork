@@ -6,6 +6,7 @@ import traceback
 import cPickle as pickle
 from uuid import uuid4
 from functools import partial
+from .logger import print_log
 
 
 dumps = partial(pickle.dumps, protocol=pickle.HIGHEST_PROTOCOL)
@@ -66,6 +67,9 @@ class Job(object):
         job._etime = None
 
         return job
+
+    def log(self, s):
+        print_log(s)
 
     def to_dict(self):
         return {
@@ -130,6 +134,7 @@ class Job(object):
             return self.success_callback(result)
         except:
             errmsg = traceback.format_exc()
+            self.log('%s: Got error, %s' % (self, errmsg))
             return self.failure_callback(errmsg)
 
     def success_callback(self, result):
@@ -149,8 +154,8 @@ class Job(object):
         return False
 
     def __str__(self):
-        return '<Job(fn=%s, kwargs=%s, status=%s, cost_time=%.2f)>' % (
-            self._func_name, self._kwargs, self._status, self.cost_time)
+        return '<Job(f=%s(%s,%s), status=%s, cost_time=%.2fs)>' % (
+            self._func_name, self._args, self._kwargs, self._status, self.cost_time)
 
     __repr__ = __str__
 
